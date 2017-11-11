@@ -1,64 +1,51 @@
-from datetime import datetime
-
+from django.views.generic import TemplateView
 from rest_framework.response import Response
 from rest_framework.status import HTTP_200_OK
 from rest_framework.views import APIView
 
-from trip.models import Trip
+from trip.models import Dummy
+from trip.serializers import DummySerializer
 
 
-class TripView(APIView):
+class RideRequest(TemplateView):
+    template_name = 'trip/request_ride.html'
+
+
+class RideLoading(TemplateView):
+    template_name = 'trip/loading.html'
+
+
+class RideSuggestion(TemplateView):
+    template_name = 'trip/suggestion_ride.html'
+
+
+class DummyView(APIView):
     def get(self, request, format=None):
-        response = {
-            'departure': {
-                'time': datetime(2017, 11, 10, 23, 26, 55),
-                'location': {
-                    'name': 'trento',
-                    'geo_point': {
-                        'lat': 235,
-                        'lon': 432674
-                    }
-                }
-            },
-            'arrival': {
-                'time': datetime(2017, 11, 11, 3, 26, 55),
-                'location': {
-                    'name': 'bolzano',
-                    'geo_point': {
-                        'lat': 3242,
-                        'lon': 79534
-                    }
-                }
-            },
-            'checkpoints': [
-                {
-                    'action': 'pick up',
-                    'location': {
-                        'name': 'san michele',
-                        'geo_point': {
-                            'lat': 3242,
-                            'lon': 79534
-                        }
-                    }
-                },
-                {
-                    'action': 'drop',
-                    'location': {
-                        'name': 'lives',
-                        'geo_point': {
-                            'lat': 3242,
-                            'lon': 79534
-                        }
-                    }
-                }
-            ]
-        }
-        return Response(response, HTTP_200_OK)
+        serializer = self.get_first_dummy()
+        return Response(serializer.data, status=HTTP_200_OK)
 
-class TripListView(APIView):
-    def get(self, request, format=None):
-        s = Trip.search()
+    def post(self, request, format=None):
+        change_dummy('asked')
+        serializer = self.get_first_dummy()
+        return Response(serializer.data, status=HTTP_200_OK)
 
-        response = s.execute()
-        hits = response.hits
-        return Response(response, HTTP_200_OK)
+    def get_first_dummy(self):
+        dummy = Dummy.objects.first()
+        serializer = DummySerializer(dummy)
+        return serializer
+
+    def put(self, request, format=None):
+        change_dummy('answered')
+        serializer = self.get_first_dummy()
+        return Response(serializer.data, status=HTTP_200_OK)
+
+    def delete(self, request, format=None):
+        change_dummy('')
+        serializer = self.get_first_dummy()
+        return Response(serializer.data, status=HTTP_200_OK)
+
+
+def change_dummy(verb):
+    dummy = Dummy.objects.first()
+    dummy.verb = verb
+    dummy.save()

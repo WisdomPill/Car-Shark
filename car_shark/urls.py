@@ -19,5 +19,5 @@ from django.contrib import admin
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
     url(r'^accounts/', include('django.contrib.auth.urls', namespace='auth')),
-    url(r'^trip/', include('trip.urls', namespace='trip', app_name='trip'))
+    url(r'^trip/', include('trip.urls', namespace='trip', app_name='car_shark'))
 ]
